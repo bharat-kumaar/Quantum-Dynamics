@@ -45,7 +45,7 @@ const loginUser = async (req, res) => {
       (user.email === 'bharatkumar70233@gmail.com' && (password === '12345678' || password === 'password123'));
     if (!isPasswordMatch) return sendResponse(res, 400, false, "Invalid credentials");
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "30d" });
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || "quantum_dynamics_jwt_super_secret_key_2026", { expiresIn: "30d" });
 
     sendResponse(res, 200, true, "Login successful", {
       user: {

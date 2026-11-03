@@ -14,8 +14,9 @@ const protect = async (req, res, next) => {
       });
     }
 
-    // Verify token
-    const decoded = require("jsonwebtoken").verify(token, process.env.JWT_SECRET);
+    // Verify token with fallback secret for plug-and-play local development
+    const secret = process.env.JWT_SECRET || "quantum_dynamics_jwt_super_secret_key_2026";
+    const decoded = require("jsonwebtoken").verify(token, secret);
 
     // Attach user info to request
     req.user = decoded;
