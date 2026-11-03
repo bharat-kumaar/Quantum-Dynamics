@@ -768,32 +768,49 @@ const seedProjectsAndMedia = async () => {
 
   let mediaCount = 0;
   for (const item of mediaCatalogue) {
-    if (uploadFiles.includes(item.filenameMatch)) {
-      const filePath = path.join(uploadsDir, item.filenameMatch);
-      const stat = fs.statSync(filePath);
-      const projectRef = item.projectIdx !== null && createdProjects[item.projectIdx] 
-        ? createdProjects[item.projectIdx]._id 
-        : null;
+    const filePath = path.join(uploadsDir, item.filenameMatch);
 
-      const mediaDoc = await Media.create({
-        originalName: item.originalName,
-        filename: item.filenameMatch,
-        path: filePath,
-        mimetype: item.mimetype,
-        size: stat.size,
-        uploadedBy: admin._id,
-        project: projectRef
-      });
-
-      // If linked to project, push to project's attachments
-      if (projectRef) {
-        await Project.findByIdAndUpdate(projectRef, {
-          $push: { attachments: mediaDoc._id }
-        });
+    // Auto-generate sample payload if running on a fresh clone with empty uploads
+    if (!fs.existsSync(filePath)) {
+      if (item.mimetype.includes('pdf')) {
+        fs.writeFileSync(filePath, '%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Count 1/Kids[3 0 R]>>endobj 3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>>>endobj\nxref\n0 4\n0000000000 65535 f\n0000000010 00000 n\n0000000060 00000 n\n0000000117 00000 n\ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n218\n%%EOF');
+      } else if (item.mimetype.includes('zip')) {
+        fs.writeFileSync(filePath, Buffer.from([0x50, 0x4B, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]));
+      } else {
+        // Minimal valid 1x1 JPEG buffer
+        fs.writeFileSync(filePath, Buffer.from([
+          0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x01, 0x00, 0x48,
+          0x00, 0x48, 0x00, 0x00, 0xFF, 0xDB, 0x00, 0x43, 0x00, 0xFF, 0xC0, 0x00, 0x0B, 0x08, 0x00, 0x01,
+          0x00, 0x01, 0x01, 0x01, 0x11, 0x00, 0xFF, 0xC4, 0x00, 0x14, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x09, 0xFF, 0xDA, 0x00, 0x08,
+          0x01, 0x01, 0x00, 0x00, 0x3F, 0x00, 0x7F, 0x00, 0xFF, 0xD9
+        ]));
       }
-
-      mediaCount++;
     }
+
+    const stat = fs.statSync(filePath);
+    const projectRef = item.projectIdx !== null && createdProjects[item.projectIdx] 
+      ? createdProjects[item.projectIdx]._id 
+      : null;
+
+    const mediaDoc = await Media.create({
+      originalName: item.originalName,
+      filename: item.filenameMatch,
+      path: filePath,
+      mimetype: item.mimetype,
+      size: stat.size,
+      uploadedBy: admin._id,
+      project: projectRef
+    });
+
+    // If linked to project, push to project's attachments
+    if (projectRef) {
+      await Project.findByIdAndUpdate(projectRef, {
+        $push: { attachments: mediaDoc._id }
+      });
+    }
+
+    mediaCount++;
   }
 
   console.log(`✅ Seeded ${mediaCount} media assets into the vault and linked to projects.`);
