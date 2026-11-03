@@ -1,0 +1,17 @@
+{
+  "name": "quantum-project",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Unified single codebase for Quantum Dynamics (Next.js + Node.js Express)",
+  "scripts": {
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"magenta,cyan\" \"npm run dev --prefix quantum-dynamics-backend\" \"npm run dev --prefix quantum-dynamics-frontend\"",
+    "dev:backend": "npm run dev --prefix quantum-dynamics-backend",
+    "dev:frontend": "npm run dev --prefix quantum-dynamics-frontend",
+    "build": "npm run build --prefix quantum-dynamics-frontend",
+    "install:all": "npm install && npm install --prefix quantum-dynamics-backend && npm install --prefix quantum-dynamics-frontend",
+    "start": "concurrently -n \"BACKEND,FRONTEND\" -c \"magenta,cyan\" \"npm run start --prefix quantum-dynamics-backend\" \"npm run start --prefix quantum-dynamics-frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
